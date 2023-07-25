@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.19;
 
 import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
 import "@semaphore-protocol/contracts/interfaces/ISemaphoreVerifier.sol";
@@ -8,7 +8,7 @@ import "./ISchemaRegistry.sol";
 import "./IEAS.sol";
 import "@openzeppelin/contracts/access/Ownable.sol"; // Access control with roles more suitable for further versions
 
-contract Ponte is Ownable {
+contract PonteEAS is Ownable(msg.sender) {
     struct Group {
         uint256 id;
         bytes32 schema;
@@ -26,6 +26,7 @@ contract Ponte is Ownable {
 
     Group[] public groups;
 
+    event ReviewSent(uint256 review, uint256 groupId);
     event MessageSent(uint256 message, uint256 groupId);
 
     constructor(
@@ -114,40 +115,41 @@ contract Ponte is Ownable {
     }
 
     function sendReview(
-        uint256 groupId,
-        uint256 review,
-        uint256 merkleTreeRoot,
-        uint256 nullifierHash,
-        uint256[8] calldata proof
+        uint256 _groupId,
+        uint256 _review,
+        uint256 _merkleTreeRoot,
+        uint256 _nullifierHash,
+        uint256[8] calldata _proof
     ) external {
         semaphore.verifyProof(
-            groupId,
-            merkleTreeRoot,
-            review,
-            nullifierHash,
-            groupId,
-            proof
+            _groupId,
+            _merkleTreeRoot,
+            _review,
+            _nullifierHash,
+            _groupId,
+            _proof
         );
+        emit ReviewSent(_review, _groupId);
     }
 
     function sendMessage(
-        uint256 message,
-        uint256 nullifierHash,
+        uint256 _message,
+        uint256 _nullifierHash,
         uint256 _groupId,
-        uint256 merkleTreeDepth,
-        uint256 merkleTreeRoot,
-        uint256[8] calldata proof
+        uint256 _merkleTreeDepth,
+        uint256 _merkleTreeRoot,
+        uint256[8] calldata _proof
     ) external {
         // no need for nullifier, directly call verifier
         verifier.verifyProof(
-            merkleTreeRoot,
-            nullifierHash,
-            message,
+            _merkleTreeRoot,
+            _nullifierHash,
+            _message,
             _groupId,
-            proof,
-            merkleTreeDepth
+            _proof,
+            _merkleTreeDepth
         );
-        emit MessageSent(message, _groupId);
+        emit MessageSent(_message, _groupId);
     }
 
     function getGroup(uint _groupId) public view returns (Group memory) {

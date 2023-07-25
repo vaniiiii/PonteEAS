@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.19;
 
 // A representation of an empty/uninitialized UID.
 bytes32 constant EMPTY_UID = 0;
